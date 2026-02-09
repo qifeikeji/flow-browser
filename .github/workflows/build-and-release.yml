@@ -58,10 +58,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Inspect dist output
+        run: |
+          echo "PWD=$(pwd)"
+          ls -la
+          echo "---- dist/ ----"
+          ls -la dist || true
+          echo "---- dist files ----"
+          find dist -maxdepth 2 -type f -print || true
+
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: linux-appimage
+          if-no-files-found: error
           path: |
             dist/*.AppImage
             dist/*.yml
