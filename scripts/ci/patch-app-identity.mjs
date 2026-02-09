@@ -17,6 +17,20 @@ function sanitizeSlug(input) {
   return slug;
 }
 
+function toProductNameFromSlug(slug) {
+  // No spaces: sunflower -> Sunflower, sunflower-browser -> SunflowerBrowser
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
+    .join("");
+}
+
+function toAppIdFromSlug(slug) {
+  // Keep it deterministic with a fixed prefix; hyphens become dots to fit reverse-DNS patterns.
+  return `dev.sun.${slug.replace(/-/g, ".")}`;
+}
+
 function replaceOrThrow(content, re, replacement, what) {
   if (!re.test(content)) {
     throw new Error(`Pattern not found for ${what}: ${re}`);
@@ -122,12 +136,10 @@ function main() {
   const repoRoot = process.cwd();
 
   const appSlug = sanitizeSlug(requireEnv("APP_SLUG"));
-  const productName = requireEnv("APP_PRODUCT_NAME").trim();
-  if (!productName) throw new Error("APP_PRODUCT_NAME cannot be empty");
-
-  const appId = String(process.env.APP_ID ?? `dev.sun.${appSlug}`).trim();
-  const packageName = String(process.env.APP_PACKAGE_NAME ?? `${appSlug}-browser`).trim();
-  const desktopFile = String(process.env.DESKTOP_FILE ?? `${appSlug}.desktop`).trim();
+  const productName = toProductNameFromSlug(appSlug);
+  const appId = toAppIdFromSlug(appSlug);
+  const packageName = appSlug;
+  const desktopFile = `${appSlug}.desktop`;
 
   const results = [];
   results.push(patchPackageJson(repoRoot, { packageName, productName }));

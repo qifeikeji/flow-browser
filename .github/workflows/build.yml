@@ -1,15 +1,8 @@
 name: Build App
 
 env:
-  # === App Identity (edit these to produce your own branded builds) ===
+  # === App Identity (edit this to produce your own branded builds; no spaces) ===
   APP_SLUG: sunflower
-  APP_PRODUCT_NAME: Sunflower Browser
-  # Reverse-DNS style identifier (important for Flatpak / app identity)
-  APP_ID: dev.sun.sunflower
-  # npm package name used by electron-builder templates like ${name}
-  APP_PACKAGE_NAME: sunflower-browser
-  # Desktop file used for xdg-settings default browser
-  DESKTOP_FILE: sunflower.desktop
 
 permissions:
   pull-requests: write
