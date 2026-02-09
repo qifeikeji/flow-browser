@@ -59,17 +59,27 @@ function ensureLinuxExecutableName(builderTs, executableName) {
   );
 }
 
+function escapeForQuote(value, quote) {
+  const v = String(value);
+  // Minimal escaping good enough for TS string literals
+  const escapedBackslashes = v.replace(/\\/g, "\\\\");
+  if (quote === '"') return escapedBackslashes.replace(/"/g, '\\"');
+  if (quote === "'") return escapedBackslashes.replace(/'/g, "\\'");
+  if (quote === "`") return escapedBackslashes.replace(/`/g, "\\`");
+  return escapedBackslashes;
+}
+
 function patchElectronBuilderTs(repoRoot, { appId, productName, executableName }) {
   const absPath = path.join(repoRoot, "electron-builder.ts");
   let content = fs.readFileSync(absPath, "utf-8");
 
-  content = replaceOrThrow(content, /(\bappId:\s*)(["'`])([^"'`]+)(\2)/, `$1"${appId}"$4`, "electron-builder appId");
-  content = replaceOrThrow(
-    content,
-    /(\bproductName:\s*)(["'`])([^"'`]+)(\2)/,
-    `$1"${productName}"$4`,
-    "electron-builder productName"
-  );
+  const appIdRe = /(\bappId:\s*)(["'`])([^"'`]+)(\2)/;
+  if (!appIdRe.test(content)) throw new Error(`Pattern not found for electron-builder appId: ${appIdRe}`);
+  content = content.replace(appIdRe, (_m, p1, quote) => `${p1}${quote}${escapeForQuote(appId, quote)}${quote}`);
+
+  const productNameRe = /(\bproductName:\s*)(["'`])([^"'`]+)(\2)/;
+  if (!productNameRe.test(content)) throw new Error(`Pattern not found for electron-builder productName: ${productNameRe}`);
+  content = content.replace(productNameRe, (_m, p1, quote) => `${p1}${quote}${escapeForQuote(productName, quote)}${quote}`);
 
   // Keep Windows executableName aligned too (harmless even if you only build Linux)
   if (/\bwin:\s*\{[\s\S]*?\bexecutableName:\s*["'`]/m.test(content)) {

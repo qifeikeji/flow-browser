@@ -28,13 +28,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Runs before the build starts
-  # Cannot find a way to do this yet without compromising security
-  before-build-comment:
+  # Runs the build
+  build:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+
     steps:
+      - name: Check out Git repository
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
       - name: Comment PR with build status
+        if: github.event_name == 'pull_request'
         continue-on-error: true
         uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
         with:
@@ -42,15 +45,6 @@ jobs:
             ### Build is in progress... 🚀
             Currently building for this pull request!
           comment-tag: build
-
-  # Runs the build
-  build:
-    needs: before-build-comment
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -93,13 +87,8 @@ jobs:
             dist/*.AppImage
             dist/*.yml
 
-  # Runs after all builds complete
-  after-build-comment:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Comment PR with artifact links
+      - name: Comment PR with artifact link
+        if: github.event_name == 'pull_request'
         uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
         continue-on-error: true
         with:
